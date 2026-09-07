@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA</title>
+    <meta property="og:title" content="Spread your dreams with NBA!" />
+    <meta property="og:description" content="The unofficial website of the National Basketball Association." />
+    <meta property="og:image" content="./assets/nba-logo.png" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/png" href="./assets/nba.png">
+    <style>
+        body{
+            background-size: auto;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        button {
+            position: absolute;
+            top: 10%;
+            left: 20%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <button>Click here to exit</button>
+    <script>
+      
+        document.addEventListener('click', () => {
+            const rand = Math.floor(Math.random() * 4)
+            const imgList = ['./assets/fu1.jpg', './assets/fu2.jpg', './assets/fu3.png', './assets/fu4.png']
+            document.body.style.backgroundImage = `url('${imgList[rand]}')`;
+        })
+    </script>
+</body>
+</html>
