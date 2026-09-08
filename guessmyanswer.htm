@@ -45,6 +45,10 @@
             animation: flyIn 3s ease-out;
             transition: opacity 3s ease-out transform 3s ease-out;
         }
+        #home {
+            margin-top: 10px;
+            animation: flyIn 3s ease-out;
+        }
         @keyframes flyIn {
                from {
                     transform: translateY(10vh);
@@ -87,24 +91,8 @@
                 alert('이 브라우저는 공유 기능을 지원하지 않습니다. 링크를 복사해주세요.');
             }
         }
-        const querysting = window.location.search;
-        const urlParams = new URLSearchParams(querysting);
-        const answer = urlParams.get('answer');
 
-        if (answer) {
-            const intro = document.createElement('div');
-            intro.innerText = 'My reply is...';
-            intro.classList.add('intro');
-            document.body.appendChild(intro);
-            
-            intro.addEventListener('click', () => {
-                Object.assign(intro.style, {
-                    opacity: 0,
-                    transform: "translateY('-10vh')"
-                })
-                document.body.innerHTML = `<div class='answer'>${decodeFromBase64(answer)}</div>`;
-            })
-        } else {
+        function loadMain() {
             document.body.innerHTML = `<h1>Guess my reply</h1><input type="text" id="answerInput" placeholder="답변 입력하기">`
             const shareButton = document.createElement('button');
             const copyButton = document.createElement('button');
@@ -130,18 +118,41 @@
                 const answerInput = document.getElementById('answerInput');
                 const answerValue = answerInput.value;
                 if (answerValue) {
-                    // const shareUrl = `${window.location.origin}${window.location.pathname}?answer=${encodeURIComponent(encodeToBase64(answerValue))}`;
-                    // navigator.clipboard.writeText(shareUrl)
-                    //     .then(() => {
-                    //         alert('공유 링크가 복사되었습니다: ' + shareUrl);
-                    //     })
-                    //     .catch(err => {
-                    //         console.error('링크 복사 실패: ', err);
-                    //     });
+                    const shareUrl = `${window.location.origin}${window.location.pathname}?answer=${encodeURIComponent(encodeToBase64(answerValue))}`;
+                    navigator.clipboard.writeText(shareUrl)
+                        .then(() => {
+                            alert('공유 링크가 복사되었습니다: ' + shareUrl);
+                        })
+                        .catch(err => {
+                            console.error('링크 복사 실패: ', err);
+                        });
                 } else {
                     alert('답변을 입력해주세요.')
                 }
             })
+        }
+
+
+        const querysting = window.location.search;
+        const urlParams = new URLSearchParams(querysting);
+        const answer = urlParams.get('answer');
+
+        if (answer) {
+            const intro = document.createElement('div');
+            intro.innerText = 'My reply is...';
+            intro.classList.add('intro');
+            document.body.appendChild(intro);
+            
+            intro.addEventListener('click', () => {
+                Object.assign(intro.style, {
+                    opacity: 0,
+                    transform: "translateY('-10vh')"
+                })
+                document.body.innerHTML = `<div class='answer'>${decodeFromBase64(answer)}</div><button class='share-button' id='home'>나도 답장 보내기</button>`;
+                document.querySelector('#home').addEventListener('click', () => {loadMain()})
+            })
+        } else {
+            loadMain()
         }
     </script>
 </body>
