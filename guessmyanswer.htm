@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 답변은...</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-align: center;
+            border: 2px black solid;
+            border-radius: 10px;
+        }
+
+        .share-button {
+            display: inline;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            color: white;
+            background-color: black;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .answer {
+            font-size: 50px;
+            animation: flyIn 3s ease-out;
+        }
+        
+        .intro {
+            font-size: 50px;
+            animation: flyIn 3s ease-out;
+            transition: opacity 3s ease-out transform 3s ease-out;
+        }
+        @keyframes flyIn {
+               from {
+                    transform: translateY(10vh);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function encodeToBase64(str) {
+            const bytes = new TextEncoder().encode(str);
+            const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join("");
+            return btoa(binString);
+        }
+
+        function decodeFromBase64(base64Str) {
+            const binString = atob(base64Str);
+            const bytes = Uint8Array.from(binString, (m) => m.codePointAt(0));
+            return new TextDecoder().decode(bytes);
+        }
+        
+        async function shareLink(answerValue) {
+            if (navigator.share) {
+                try {
+                await navigator.share({
+                    title: '두구두구두구두구',
+                    text: '하하하하하',
+                    url:  `${window.location.origin}${window.location.pathname}?answer=${encodeURIComponent(encodeToBase64(answerValue))}`,
+                });
+                console.log('공유 성공!');
+                } catch (error) {
+                console.error('공유 실패 또는 취소:', error);
+                }
+            } else {
+                alert('이 브라우저는 공유 기능을 지원하지 않습니다. 링크를 복사해주세요.');
+            }
+        }
+        const querysting = window.location.search;
+        const urlParams = new URLSearchParams(querysting);
+        const answer = urlParams.get('answer');
+
+        if (answer) {
+            const intro = document.createElement('div');
+            intro.innerText = 'My reply is...';
+            intro.classList.add('intro');
+            document.body.appendChild(intro);
+            
+            intro.addEventListener('click', () => {
+                Object.assign(intro.style, {
+                    opacity: 0,
+                    transform: "translateY('-10vh')"
+                })
+                document.body.innerHTML = `<div class='answer'>${decodeFromBase64(answer)}</div>`;
+            })
+        } else {
+            document.body.innerHTML = `<h1>Guess my reply</h1><input type="text" id="answerInput" placeholder="답변 입력하기">`
+            const shareButton = document.createElement('button');
+            const copyButton = document.createElement('button');
+            shareButton.setAttribute('type', 'submit');
+            shareButton.classList.add('share-button');
+            shareButton.innerText = '공유하기';
+            copyButton.setAttribute('type', 'submit');
+            copyButton.classList.add('share-button')
+            copyButton.innerText = '링크 복사하기';
+            document.body.appendChild(shareButton);
+            document.body.appendChild(copyButton);
+
+            shareButton.addEventListener('click', () => {
+                const answerInput = document.getElementById('answerInput');
+                const answerValue = answerInput.value;
+                if (answerValue) {
+                    shareLink(answerValue)
+                } else {
+                    alert('답변을 입력해주세요.');
+                }
+            });
+            copyButton.addEventListener('click', () => {
+                const answerInput = document.getElementById('answerInput');
+                const answerValue = answerInput.value;
+                if (answerValue) {
+                    // const shareUrl = `${window.location.origin}${window.location.pathname}?answer=${encodeURIComponent(encodeToBase64(answerValue))}`;
+                    // navigator.clipboard.writeText(shareUrl)
+                    //     .then(() => {
+                    //         alert('공유 링크가 복사되었습니다: ' + shareUrl);
+                    //     })
+                    //     .catch(err => {
+                    //         console.error('링크 복사 실패: ', err);
+                    //     });
+                } else {
+                    alert('답변을 입력해주세요.')
+                }
+            })
+        }
+    </script>
+</body>
+</html>
