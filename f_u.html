@@ -40,8 +40,8 @@
       
         document.addEventListener('click', () => {
             const rand = Math.floor(Math.random() * 4)
-            const imgList = ['./assets/fu1.jpg', './assets/fu2.jpg', './assets/fu3.png', './assets/fu4.png']
-            document.body.style.backgroundImage = `url('${imgList[rand]}')`;
+            const imgList = ['1.jpg', '2.jpg', '3.png', '4.png']
+            document.body.style.backgroundImage = `url('./assets/fu/fu${imgList[rand]}')`;
         })
     </script>
 </body>
