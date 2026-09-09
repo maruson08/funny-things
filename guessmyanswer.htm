@@ -1,166 +1,566 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>내 답변은...</title>
     <style>
+        :root {
+            font-family: Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
+            min-height: 100vh;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            font-family: Arial, sans-serif;
+            gap: 10px;
         }
 
         input[type="text"] {
             padding: 10px;
             font-size: 16px;
-            margin-bottom: 10px;
             text-align: center;
-            border: 2px black solid;
+            border: 2px solid #000;
             border-radius: 10px;
         }
 
-        .share-button {
-            display: inline;
+        input[type="text"]:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .image-picker {
+            display: flex;
+            align-items: stretch;
+            border: 2px solid #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .image-picker__input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .image-picker__name {
+            border: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .image-picker__label,
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
-            border: none;
-            color: white;
-            background-color: black;
+            border: 0;
+            color: #fff;
+            background: #000;
             border-radius: 10px;
-            margin-bottom: 10px;
         }
 
-        .answer {
-            font-size: 50px;
-            animation: flyIn 3s ease-out;
+        .image-picker__label {
+            border-radius: 0;
+            padding-inline: 14px;
         }
-        
+
+        .answer,
         .intro {
             font-size: 50px;
-            animation: flyIn 3s ease-out, horizontal-shaking 3s infinite;
-            transition: opacity 3s ease-out transform 3s ease-out;
-        }
-        #home {
-            margin-top: 10px;
-            animation: flyIn 3s ease-out;
-        }
-        @keyframes flyIn {
-               from {
-                    transform: translateY(10vh);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-        }
-        @keyframes horizontal-shaking {
-            0% { transform: translateX(0) }
-            25% { transform: translateX(-5px) }
-            50% { transform: translateX(0px) }
-            75% { transform: translateX(5px) }
-            100% { transform: translateX(0) }
-        }
-    </style>
-</head>
-<body>
-    <script>
-        function encodeToBase64(str) {
-            const bytes = new TextEncoder().encode(str);
-            const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join("");
-            return btoa(binString);
+            text-align: center;
+            animation: flyIn 0.8s ease-out;
         }
 
-        function decodeFromBase64(base64Str) {
-            const binString = atob(base64Str);
-            const bytes = Uint8Array.from(binString, (m) => m.codePointAt(0));
-            return new TextDecoder().decode(bytes);
+        .intro {
+            cursor: pointer;
+            animation: flyIn 0.8s ease-out, horizontalShaking 3s infinite;
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
         }
-        
-        async function shareLink(answerValue) {
-            if (navigator.share) {
-                try {
-                await navigator.share({
-                    title: '두구두구두구두구',
-                    text: '하하하하하',
-                    url:  `${window.location.origin}${window.location.pathname}?answer=${encodeURIComponent(encodeToBase64(answerValue))}`,
-                });
-                console.log('공유 성공!');
-                } catch (error) {
-                console.error('공유 실패 또는 취소:', error);
-                }
-            } else {
-                alert('이 브라우저는 공유 기능을 지원하지 않습니다. 링크를 복사해주세요.');
+
+        .preview-image {
+            width: min(720px, 92vw);
+            height: auto;
+            max-height: 65vh;
+            border-radius: 10px;
+            object-fit: contain;
+        }
+
+        @keyframes flyIn {
+            from {
+                transform: translateY(10vh);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
             }
         }
 
-        function loadMain() {
-            document.body.innerHTML = `<h1>Guess my reply</h1><input type="text" id="answerInput" placeholder="답변 입력하기">`
-            const shareButton = document.createElement('button');
-            const copyButton = document.createElement('button');
-            shareButton.setAttribute('type', 'submit');
-            shareButton.classList.add('share-button');
-            shareButton.innerText = '공유하기';
-            copyButton.setAttribute('type', 'submit');
-            copyButton.classList.add('share-button')
-            copyButton.innerText = '링크 복사하기';
-            document.body.appendChild(shareButton);
-            document.body.appendChild(copyButton);
+        @keyframes horizontalShaking {
+            0%, 50%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+<script type="text/javascript" nonce="8cc242901aff41e99aab94f6c70" src="//local.adguard.org?ts=1788954321688&amp;type=content-script&amp;dmn=chatgpt.com&amp;url=https%3A%2F%2Fchatgpt.com%2Fbackend-api%2Festuary%2Fcontent%3Fid%3Dfile_0000000044e081fb9a32e1cafaf5ede5%26ts%3D496931%26p%3Dfs%26cid%3D1%26sig%3D8888e5ab4c3c31f8e8a31264d9382e069ed7c0e4882cc35126c6d64cea92be88%26v%3D0&amp;app=chrome.exe&amp;css=2&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-loc&amp;st-dnt"></script><script type="text/javascript" nonce="8cc242901aff41e99aab94f6c70" src="//local.adguard.org?ts=1788954321688&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script></head>
+<body>
+<script>
+    const MAX_SHARE_URL_LENGTH = 3500;
 
-            shareButton.addEventListener('click', () => {
-                const answerInput = document.getElementById('answerInput');
-                const answerValue = answerInput.value;
-                if (answerValue) {
-                    shareLink(answerValue)
-                } else {
-                    alert('답변을 입력해주세요.');
+    function bytesToBase64Url(bytes) {
+        let binary = '';
+        const chunkSize = 0x8000;
+
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+        }
+
+        return btoa(binary)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/g, '');
+    }
+
+    function base64UrlToBytes(value) {
+        const base64 = value
+            .replace(/-/g, '+')
+            .replace(/_/g, '/')
+            .padEnd(Math.ceil(value.length / 4) * 4, '=');
+
+        const binary = atob(base64);
+        return Uint8Array.from(binary, char => char.charCodeAt(0));
+    }
+
+    function encodeText(value) {
+        return bytesToBase64Url(new TextEncoder().encode(value));
+    }
+
+    function decodeText(value) {
+        try {
+            return new TextDecoder().decode(base64UrlToBytes(value));
+        } catch {
+            return '';
+        }
+    }
+
+    function createElement(tag, options = {}) {
+        const element = document.createElement(tag);
+
+        if (options.className) element.className = options.className;
+        if (options.text) element.textContent = options.text;
+        if (options.attrs) {
+            Object.entries(options.attrs).forEach(([key, value]) => {
+                element.setAttribute(key, value);
+            });
+        }
+
+        return element;
+    }
+
+    function clearBody() {
+        document.body.replaceChildren();
+    }
+
+    function canvasToBlob(canvas, quality) {
+        return new Promise((resolve, reject) => {
+            canvas.toBlob(
+                blob => blob ? resolve(blob) : reject(new Error('이미지 압축에 실패했습니다.')),
+                'image/webp',
+                quality
+            );
+        });
+    }
+
+    async function compressImageForLink(file, maxPayloadLength) {
+        const bitmap = await createImageBitmap(file);
+
+        const candidates = [
+            [320, 0.50],
+            [260, 0.42],
+            [220, 0.35],
+            [180, 0.30],
+            [150, 0.25],
+            [128, 0.22],
+            [110, 0.18],
+            [96, 0.15],
+            [80, 0.12],
+            [64, 0.10]
+        ];
+
+        let smallestPayload = '';
+
+        try {
+            for (const [maxSide, quality] of candidates) {
+                const scale = Math.min(1, maxSide / bitmap.width, maxSide / bitmap.height);
+                const width = Math.max(1, Math.round(bitmap.width * scale));
+                const height = Math.max(1, Math.round(bitmap.height * scale));
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+
+                const context = canvas.getContext('2d');
+                if (!context) throw new Error('Canvas context를 생성할 수 없습니다.');
+
+                context.drawImage(bitmap, 0, 0, width, height);
+                const blob = await canvasToBlob(canvas, quality);
+                const bytes = new Uint8Array(await blob.arrayBuffer());
+                const payload = bytesToBase64Url(bytes);
+
+                if (!smallestPayload || payload.length < smallestPayload.length) {
+                    smallestPayload = payload;
+                }
+
+                if (payload.length <= maxPayloadLength) {
+                    return payload;
+                }
+            }
+        } finally {
+            bitmap.close();
+        }
+
+        return smallestPayload;
+    }
+
+    function getBaseUrl() {
+        return `${window.location.origin}${window.location.pathname}`;
+    }
+
+    function buildShareUrl(answerPayload, imagePayload = '') {
+        const imagePart = imagePayload ? `&i=${imagePayload}` : '';
+        return `${getBaseUrl()}#a=${answerPayload}${imagePart}`;
+    }
+
+    async function getShareUrl(answer, imageFile) {
+        const answerPayload = encodeText(answer);
+        const baseUrl = buildShareUrl(answerPayload);
+
+        if (!imageFile) return baseUrl;
+
+        const imageBudget = Math.max(
+            300,
+            MAX_SHARE_URL_LENGTH - baseUrl.length - '&i='.length
+        );
+
+        const imagePayload = await compressImageForLink(imageFile, imageBudget);
+        const shareUrl = buildShareUrl(answerPayload, imagePayload);
+
+        if (shareUrl.length > MAX_SHARE_URL_LENGTH) {
+            throw new Error('이미지를 링크 길이 제한 안으로 줄이지 못했습니다.');
+        }
+
+        return shareUrl;
+    }
+
+    async function share(answer, imageFile) {
+        const shareUrl = await getShareUrl(answer, imageFile);
+
+        if (!navigator.share) {
+            await navigator.clipboard.writeText(shareUrl);
+            alert(`공유 기능을 지원하지 않아 링크를 복사했습니다. (${shareUrl.length}자)`);
+            return;
+        }
+
+        try {
+            await navigator.share({ url: shareUrl });
+        } catch (error) {
+            if (error?.name !== 'AbortError') {
+                console.error('공유 실패:', error);
+                await navigator.clipboard.writeText(shareUrl);
+                alert(`공유에 실패해 링크를 복사했습니다. (${shareUrl.length}자)`);
+            }
+        }
+    }
+
+    function loadMain() {
+        clearBody();
+
+        const title = createElement('h1', { text: 'Guess my reply' });
+        const answerInput = createElement('input', {
+            attrs: {
+                type: 'text',
+                placeholder: '답변 입력하기',
+                autocomplete: 'off'
+            }
+        });
+
+        const imagePicker = createElement('div', { className: 'image-picker' });
+        const imageInput = createElement('input', {
+            className: 'image-picker__input',
+            attrs: {
+                type: 'file',
+                accept: 'image/*',
+                id: 'imageInput'
+            }
+        });
+        const imageName = createElement('input', {
+            className: 'image-picker__name',
+            attrs: {
+                type: 'text',
+                placeholder: '파일을 선택해주세요',
+                readonly: ''
+            }
+        });
+        const imageLabel = createElement('label', {
+            className: 'image-picker__label',
+            text: '파일찾기',
+            attrs: { for: 'imageInput' }
+        });
+
+        imagePicker.append(imageInput, imageName, imageLabel);
+
+        const shareButton = createElement('button', {
+            className: 'button',
+            text: '공유하기',
+            attrs: { type: 'button' }
+        });
+        const copyButton = createElement('button', {
+            className: 'button',
+            text: '링크 복사하기',
+            attrs: { type: 'button' }
+        });
+
+        document.body.append(title, answerInput, imagePicker, shareButton, copyButton);
+
+        imageInput.addEventListener('change', () => {
+            imageName.value = imageInput.files?.[0]?.name ?? '';
+        });
+
+        shareButton.addEventListener('click', async () => {
+            const answer = answerInput.value.trim();
+            if (!answer) {
+                alert('답변을 입력해주세요.');
+                return;
+            }
+
+            shareButton.disabled = true;
+            try {
+                await share(answer, imageInput.files?.[0]);
+            } catch (error) {
+                console.error(error);
+                alert('이미지를 링크 안에 담기에는 너무 큽니다. 더 작은 이미지를 선택해주세요.');
+            } finally {
+                shareButton.disabled = false;
+            }
+        });
+
+        copyButton.addEventListener('click', async () => {
+            const answer = answerInput.value.trim();
+            if (!answer) {
+                alert('답변을 입력해주세요.');
+                return;
+            }
+
+            copyButton.disabled = true;
+            try {
+                const shareUrl = await getShareUrl(answer, imageInput.files?.[0]);
+                await navigator.clipboard.writeText(shareUrl);
+                alert(`공유 링크가 복사되었습니다. (${shareUrl.length}자)`);
+            } catch (error) {
+                console.error(error);
+                alert('이미지를 링크 안에 담기에는 너무 큽니다. 더 작은 이미지를 선택해주세요.');
+            } finally {
+                copyButton.disabled = false;
+            }
+        });
+    }
+
+    function imagePayloadToBlob(payload) {
+        try {
+            const bytes = base64UrlToBytes(payload);
+            return new Blob([bytes], { type: 'image/webp' });
+        } catch {
+            return null;
+        }
+    }
+
+    function sharpenCanvas(canvas, amount = 0.22) {
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) return;
+
+        const { width, height } = canvas;
+        const source = context.getImageData(0, 0, width, height);
+        const src = source.data;
+        const output = new ImageData(width, height);
+        const dst = output.data;
+        const stride = width * 4;
+
+        for (let y = 1; y < height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+                const i = (y * width + x) * 4;
+
+                for (let channel = 0; channel < 3; channel++) {
+                    const value =
+                        src[i + channel] * (1 + amount * 4) -
+                        src[i - 4 + channel] * amount -
+                        src[i + 4 + channel] * amount -
+                        src[i - stride + channel] * amount -
+                        src[i + stride + channel] * amount;
+
+                    dst[i + channel] = Math.max(0, Math.min(255, value));
+                }
+
+                dst[i + 3] = src[i + 3];
+            }
+        }
+
+        // 가장자리는 원본 픽셀 유지
+        for (let x = 0; x < width; x++) {
+            for (const y of [0, height - 1]) {
+                const i = (y * width + x) * 4;
+                dst.set(src.subarray(i, i + 4), i);
+            }
+        }
+        for (let y = 1; y < height - 1; y++) {
+            for (const x of [0, width - 1]) {
+                const i = (y * width + x) * 4;
+                dst.set(src.subarray(i, i + 4), i);
+            }
+        }
+
+        context.putImageData(output, 0, 0);
+    }
+
+    async function createEnhancedPreview(payload) {
+        const blob = imagePayloadToBlob(payload);
+        if (!blob) return null;
+
+        const bitmap = await createImageBitmap(blob);
+
+        try {
+            const displayTarget = Math.min(
+                1200,
+                Math.max(720, Math.round(Math.min(window.innerWidth * 1.8, 1200)))
+            );
+            const scale = Math.max(1, Math.min(8, displayTarget / Math.max(bitmap.width, bitmap.height)));
+            const targetWidth = Math.max(1, Math.round(bitmap.width * scale));
+            const targetHeight = Math.max(1, Math.round(bitmap.height * scale));
+
+            let source = document.createElement('canvas');
+            source.width = bitmap.width;
+            source.height = bitmap.height;
+            let sourceContext = source.getContext('2d');
+            sourceContext.imageSmoothingEnabled = true;
+            sourceContext.imageSmoothingQuality = 'high';
+            sourceContext.drawImage(bitmap, 0, 0);
+
+            while (source.width * 2 < targetWidth && source.height * 2 < targetHeight) {
+                const next = document.createElement('canvas');
+                next.width = Math.min(targetWidth, source.width * 2);
+                next.height = Math.min(targetHeight, source.height * 2);
+                const nextContext = next.getContext('2d');
+                nextContext.imageSmoothingEnabled = true;
+                nextContext.imageSmoothingQuality = 'high';
+                nextContext.drawImage(source, 0, 0, next.width, next.height);
+                source = next;
+            }
+
+            const canvas = createElement('canvas', {
+                className: 'preview-image',
+                attrs: {
+                    width: String(targetWidth),
+                    height: String(targetHeight),
+                    role: 'img',
+                    'aria-label': '공유된 이미지'
                 }
             });
-            copyButton.addEventListener('click', () => {
-                const answerInput = document.getElementById('answerInput');
-                const answerValue = answerInput.value;
-                if (answerValue) {
-                    const shareUrl = `${window.location.origin}${window.location.pathname}?answer=${encodeURIComponent(encodeToBase64(answerValue))}`;
-                    navigator.clipboard.writeText(shareUrl)
-                        .then(() => {
-                            alert('공유 링크가 복사되었습니다: ' + shareUrl);
-                        })
-                        .catch(err => {
-                            console.error('링크 복사 실패: ', err);
-                        });
-                } else {
-                    alert('답변을 입력해주세요.')
+            const context = canvas.getContext('2d');
+            context.imageSmoothingEnabled = true;
+            context.imageSmoothingQuality = 'high';
+            context.drawImage(source, 0, 0, targetWidth, targetHeight);
+
+            sharpenCanvas(canvas, 0.18);
+            return canvas;
+        } finally {
+            bitmap.close();
+        }
+    }
+
+    function loadAnswer(answerPayload, imagePayload) {
+        clearBody();
+
+        const intro = createElement('div', {
+            className: 'intro',
+            text: 'My reply is...'
+        });
+
+        document.body.appendChild(intro);
+
+        intro.addEventListener('click', () => {
+            intro.style.opacity = '0';
+            intro.style.transform = 'translateY(-10vh)';
+
+            window.setTimeout(async () => {
+                clearBody();
+
+                const answerElement = createElement('div', {
+                    className: 'answer',
+                    text: decodeText(answerPayload)
+                });
+
+                document.body.appendChild(answerElement);
+
+                if (imagePayload) {
+                    try {
+                        const enhancedPreview = await createEnhancedPreview(imagePayload);
+                        if (enhancedPreview) {
+                            document.body.appendChild(enhancedPreview);
+                        }
+                    } catch (error) {
+                        console.error('이미지 업스케일링 실패:', error);
+                    }
                 }
-            })
+
+                const homeButton = createElement('button', {
+                    className: 'button',
+                    text: '나도 답장 보내기',
+                    attrs: { type: 'button' }
+                });
+
+                homeButton.style.animation = "animation: flyIn 0.8s ease-out;"
+
+                homeButton.addEventListener('click', () => {
+                    history.replaceState(null, '', window.location.pathname);
+                    loadMain();
+                });
+
+                document.body.appendChild(homeButton);
+            }, 400);
+        });
+    }
+
+    function init() {
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+
+        // 새 형식: #a=...&i=...
+        const answerPayload = hashParams.get('a');
+        const imagePayload = hashParams.get('i');
+
+        if (answerPayload) {
+            loadAnswer(answerPayload, imagePayload);
+            return;
         }
 
+        loadMain();
+    }
 
-        const querysting = window.location.search;
-        const urlParams = new URLSearchParams(querysting);
-        const answer = urlParams.get('answer');
-
-        if (answer) {
-            const intro = document.createElement('div');
-            intro.innerText = 'My reply is...';
-            intro.classList.add('intro');
-            document.body.appendChild(intro);
-            
-            intro.addEventListener('click', () => {
-                Object.assign(intro.style, {
-                    opacity: 0,
-                    transform: "translateY('-10vh')"
-                })
-                document.body.innerHTML = `<div class='answer'>${decodeFromBase64(answer)}</div><button class='share-button' id='home'>나도 답장 보내기</button>`;
-                document.querySelector('#home').addEventListener('click', () => {loadMain()})
-            })
-        } else {
-            loadMain()
-        }
-    </script>
+    init();
+</script>
 </body>
 </html>
